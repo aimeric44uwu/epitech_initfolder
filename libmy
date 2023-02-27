@@ -68,6 +68,8 @@ for fich in filetoaddinmyh:
                             formattedparameters = formattedparameters + ", "
                 elif param != "dirent" and not param.isupper():
                     formattedparameters = formattedparameters + ", " + param + " "
+                elif param == "DIR":
+                    formattedparameters = formattedparameters + ", " + param + " "
                 else :
                     formattedparameters = formattedparameters + param + " "
             if return_type.strip().endswith("*"):
