@@ -5,7 +5,7 @@ import glob
 import shutil
 import re
 
-SCRIPTDIR="/home/44_uwu/Documents/useful_script/"
+SCRIPTDIR="./useful_script/"
 chaine=""
 variabledeclaration = ["int" , "char" , "void" , "struct" , "dirent" , "DIR" , "const" , "double" , "float" , "long", "sfVector2f"]
 formattedchainmysh = ""
