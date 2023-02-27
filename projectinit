@@ -5,7 +5,7 @@ import glob
 import shutil
 import re
 
-SCRIPTDIR="/home/44_uwu/Documents/useful_script/"
+SCRIPTDIR="./useful_script/"
 chaine=""
 srcfile="./src/my_src.c"
 tempfile = ""
