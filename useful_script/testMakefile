@@ -1,0 +1,36 @@
+##
+## EPITECH PROJECT, 2022
+## Makefile
+## File description:
+## Task of pool
+##
+
+#MAINFILE 	=  	../main.c
+
+TESTFILE 	=  	my_test.c
+
+BINNAME     =   my_test
+
+FLAGS 		=  	-I../include/ -w
+
+LIB   		=	-L../lib/my -lmy
+
+all: $(BINNAME)
+
+$(BINNAME):
+	gcc -o $(BINNAME) $(TESTFILE) $(MAINFILE) $(LIB) $(FLAGS)
+	@if [ -f $(BINNAME) ]; then \
+		echo -e "\033[92mTest file succesfully compiled\033[0m" ; \
+	fi
+	@echo -e "\033[92mexecution du test...\nresultat de l'execution du test :\033[0m" ;
+	@echo ''
+	@./$(BINNAME)
+	@echo ''
+
+fclean:
+	rm -f $(BINNAME)
+	@if [ ! -f $(BINNAME) ]; then \
+		echo -e "\033[92m\nFclean succesfully done\n\033[0m" ; \
+	fi
+
+re: fclean all

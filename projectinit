@@ -1,0 +1,155 @@
+#!/usr/bin/env python3
+
+import os
+import glob
+import shutil
+import re
+
+SCRIPTDIR="/home/44_uwu/Documents/useful_script/"
+chaine=""
+srcfile="./src/my_src.c"
+tempfile = ""
+tempcontentfile = ""
+declaration = ""
+formattedparameters = ""
+formattedchainmysh = ""
+variabledeclaration = ["int" , "char" , "void" , "struct" , "dirent" , "DIR" , "const" , "double" , "float" , "long", "sfVector2f"]
+filetoban = ["main.c", "my_src.c", "my_test_mouli.c", "my_test.c"]
+filetoaddinmyh = ""
+
+print("Initializing git folder")
+
+os.system("mkdir -p lib")
+os.chdir("lib")
+os.system("mkdir -p my")
+os.chdir("my")
+os.system("mkdir -p utils")
+os.chdir("utils")
+
+print("do you want to add \033[0;32mevery useful script\033[0m to your lib ? (y/n) blank for yes")
+addeverything = input()
+
+for fich in glob.glob(SCRIPTDIR+"*.c"):
+    if os.path.isfile(fich) and not os.path.basename(fich) in filetoban:
+        if addeverything == "n" or addeverything == "N":
+            print("do you want to add \033[0;32m"+os.path.basename(fich)+"\033[0m to your lib ? (y/n) blank for no")
+            answer = input()
+            if answer == "y" or answer == "Y":
+                shutil.copy(fich, ".")
+                chaine=chaine+"utils/"+os.path.basename(fich)+ " \\\\\\" +"\n"
+        else:
+            shutil.copy(fich, ".")
+            chaine=chaine+"utils/"+os.path.basename(fich)+ " \\\\\\" +"\n"
+
+os.chdir("../")
+
+shutil.copy(SCRIPTDIR+"libMakefile", "Makefile")
+os.system("sed -i 's/SRC	  =/SRC    ="+chaine.replace("/", "\\/")+"/' Makefile")
+os.system("sed -i 's/utils/\t\t\tutils/' Makefile")
+os.system("sed -i 's/SRC    =			/SRC\t\t=\t/' Makefile")
+
+shutil.copy(SCRIPTDIR+"create_struct.h", ".")
+
+os.chdir("../../")
+print("do you want to add a \033[0;32mmain.c file \033[0mto your project? (y/n) blank for yes")
+answer = input()
+
+if answer != "n" and answer != "N":
+    shutil.copy(SCRIPTDIR+"main.c", ".")
+
+shutil.copy(SCRIPTDIR+"Makefile", ".")
+
+print("do you want to add a \033[0;32msrc folder \033[0mto your project ? (y/n) blank for yes")
+answer = input()
+
+if answer != "n" and answer != "N":
+    os.system("mkdir -p src")
+    shutil.copy(SCRIPTDIR+"my_src.c", "./src")
+    Makefile = open("Makefile", "r")
+    replacement = ""
+    for line in Makefile:
+        changes = line.replace("INCF\t\t=\tinclude", "INCF\t\t=\tinclude\n\nSRCFILE\t\t=\t" + srcfile + " \\")
+        changes = changes.replace("gcc -o $(BINNAME) $(MAINFILE) $(LIB) $(FLAGS)", "gcc -o $(BINNAME) $(MAINFILE) $(SRCFILE) $(LIB) $(FLAGS)")
+        replacement = replacement + changes
+    Makefile.close()
+    Makefileout = open("Makefile", "w")
+    Makefileout.write(replacement)
+    Makefileout.close()
+
+print("do you want to add a \033[0;32mtests folder \033[0mto your project ? (y/n) blank for yes")
+answer = input()
+
+if answer != "n" and answer != "N":
+    os.system("mkdir -p tests")
+    shutil.copy(SCRIPTDIR+"my_test.c", "./tests")
+    shutil.copy(SCRIPTDIR+"test_text.txt", "./tests")
+    shutil.copy(SCRIPTDIR+"testMakefile", "./tests/Makefile")
+
+print("do you want to add a \033[0;32mftests folder\033[0m to your project ? (y/n) blank for yes")
+answer = input()
+
+if answer != "n" and answer != "N":
+    os.system("mkdir -p ftests")
+    shutil.copy(SCRIPTDIR+"ftest.toml", "./ftests")
+    shutil.copy(SCRIPTDIR+"mouliMakefile", "./ftests/Makefile")
+
+print("do you want to add a \033[0;32mgitignore file\033[0m to your project ? (y/n) blank for yes")
+answer = input()
+
+if answer != "n" and answer != "N":
+    gitignorefile = open(".gitignore", "w")
+    gitignorefile.write(".vscode \n.gitignore \n*.out\n*.a\nsrc/main.c\n*.tgz\nmain\n*.o \nftest/ \ntests/ \ninclude/ \n")
+    gitignorefile.close()
+
+myhfile = open("lib/my/my.h", "w")
+myhfile.write("/*\n** EPITECH PROJECT, 2022\n** my_project\n** File description:\n** my.h\n*/\n\n")
+myhfile.write("#ifndef MY_H_\n    #define MY_H_\n\n    #include <stdio.h>\n    #include <fcntl.h>\n    ")
+myhfile.write("#include <stdlib.h>\n    #include <unistd.h>\n    #include \"create_struct.h\"\n\n")
+
+filetoaddinmyh = glob.glob("./lib/my/utils/*.c") + glob.glob("./src/*.c")
+
+for fich in filetoaddinmyh:
+    tempfile = open(fich, "r")
+    tempcontentfile = tempfile.read()
+    pattern = r'^\s*(\w+\s+[\*\s]*)\s*(\w+)\s*\(([^)]*)\)\s*{'
+
+    matches = re.findall(pattern, tempcontentfile, re.MULTILINE|re.DOTALL)
+
+    for match in matches:
+        formattedparameters = ""
+        return_type, function_name, parameters = match
+        parameters = re.sub(r'\s+', ' ', parameters.strip())
+        parameters = re.sub(r',', ' ', parameters.strip())
+        if return_type.strip() != "return":
+            for param in (parameters.strip().split(" ")):
+                if param not in variabledeclaration and not param.isupper():
+                    for star in list(param):
+                        if star == "*" or star == "]":
+                            formattedparameters = formattedparameters + "*"
+                        if star == ",":
+                            formattedparameters = formattedparameters + ", "
+                elif param != "dirent" and not param.isupper():
+                    formattedparameters = formattedparameters + ", " + param + " "
+                else :
+                    formattedparameters = formattedparameters + param + " "
+            if return_type.strip().endswith("*"):
+                declaration = return_type.strip() + "" + function_name + "("+ formattedparameters + ");"
+            else:
+                declaration = return_type.strip() + " " + function_name + "("+ formattedparameters + ");"
+        declaration = declaration.replace("(,", "(")
+        declaration = declaration.replace("( ", "(")
+        declaration = declaration.replace("(", "( ")
+        declaration = declaration.replace("( )", "( void )")
+        declaration = declaration.replace("*)", "* )")
+        declaration = declaration.replace("const , char", "const char")
+        declaration = declaration.replace("char , const", "char const")
+        formattedchainmysh = formattedchainmysh + "    "+ declaration + "\n"
+
+myhfile.write(formattedchainmysh)
+myhfile.write("#endif\n")
+myhfile.close()
+os.system("mkdir -p include")
+for fich in glob.glob("./lib/my/*.h"):
+    shutil.copy(fich, "./include")
+
+print("\033[0;32mInitialisation done !\033[0m")

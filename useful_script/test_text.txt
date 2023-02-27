@@ -1,0 +1,2 @@
+si ceci s'affiche,
+la lecture de fichier fonctionne correctement :)

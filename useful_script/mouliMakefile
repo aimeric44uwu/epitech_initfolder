@@ -1,0 +1,23 @@
+##
+## EPITECH PROJECT, 2022
+## Makefile
+## File description:
+## Task of pool
+##
+
+MAINBIN 	=  	../main
+
+all: ftest
+
+$(MAINBIN):
+	@make -C ../
+
+ftest:  $(MAINBIN)
+	( cd ../ && ftest -f ./ftests/ftest.toml )
+
+clean:
+	@if [ ! -f $(BINNAME) ] && [ ! -f $(LIBNAME) ] && [ ! -d $(INCF) ]; then \
+		echo -e "\033[92m\nclean succesfully done\n\033[0m" ; \
+	fi
+
+re: clean all

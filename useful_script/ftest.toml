@@ -1,0 +1,9 @@
+name = "test main file"
+
+[[test]]
+name = "print hello world"
+type = "command"
+command = "./main"
+expected.stdout = "hello world\n"
+expected.stderr = ""
+expected.exit_code = 0
