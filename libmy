@@ -5,9 +5,10 @@ import glob
 import shutil
 import re
 
-SCRIPTDIR="./useful_script/"
+SCRIPTDIR="/home/44_uwu/Documents/useful_script/"
 chaine=""
 variabledeclaration = ["int" , "char" , "void" , "struct" , "dirent" , "DIR" , "const" , "double" , "float" , "long", "sfVector2f"]
+filetoban = ["main.c", "my_src.c", "my_test_mouli.c", "my_test.c"]
 formattedchainmysh = ""
 oldhfile = ""
 toaddinhfile = ""
@@ -21,151 +22,334 @@ replacement = ""
 oldMakefile = ""
 makefilebaserule = ["clean", "fclean"]
 
-for path, subdirs, files in os.walk("./lib/my"):
-    for name in files:
-        if name.endswith(".c"):
-            chaine=chaine+ "\t\t\t" + os.path.join(path, name)[2:] + " \\" + "\n"
-
-Makefile = open("./lib/my/Makefile", "r")
-for line in Makefile:
-    if not line.endswith(".c \\\n"):
-        replacement = replacement + line
-    if line.startswith("SRC\t\t="):
-        replacement = replacement + line[:line.find("=")+1] + chaine
-for line in replacement.split("\n"):
-    if line.startswith("SRC\t\t=\t\t\t"):
-        replacement = replacement.replace(line, "SRC\t\t=\t" + line[9:])
-Makefile.close()
-Makefileout = open("./lib/my/Makefile", "w")
-Makefileout.write(replacement)
-Makefileout.close()
-
-myhfile = open("./lib/my/my.h", "r")
-oldhfile = myhfile.read()
-myhfile.close()
-myhfile = open("./lib/my/my.h", "w")
-filetoaddinmyh = glob.glob("./lib/my/utils/*.c") + glob.glob("./lib/my/*.c") + glob.glob("./src/*.c")
-
-for fich in filetoaddinmyh:
-    tempfile = open(fich, "r")
-    tempcontentfile = tempfile.read()
-    pattern = r'^\s*(\w+\s+[\*\s]*)\s*(\w+)\s*\(([^)]*)\)\s*{'
-
-    matches = re.findall(pattern, tempcontentfile, re.MULTILINE|re.DOTALL)
-
-    for match in matches:
-        formattedparameters = ""
-        return_type, function_name, parameters = match
-        parameters = re.sub(r'\s+', ' ', parameters.strip())
-        parameters = re.sub(r',', ' ', parameters.strip())
-        if return_type.strip() != "return":
-            for param in (parameters.strip().split(" ")):
-                if param not in variabledeclaration and not param.isupper():
-                    for star in list(param):
-                        if star == "*" or star == "]":
-                            formattedparameters = formattedparameters + "*"
-                        if star == ",":
-                            formattedparameters = formattedparameters + ", "
-                elif param != "dirent" and not param.isupper():
-                    formattedparameters = formattedparameters + ", " + param + " "
-                elif param == "DIR":
-                    formattedparameters = formattedparameters + ", " + param + " "
-                else :
-                    formattedparameters = formattedparameters + param + " "
-            if return_type.strip().endswith("*"):
-                declaration = return_type.strip() + "" + function_name + "("+ formattedparameters + ");"
-            else:
-                declaration = return_type.strip() + " " + function_name + "("+ formattedparameters + ");"
-        declaration = declaration.replace("(,", "(")
-        declaration = declaration.replace("( ", "(")
-        declaration = declaration.replace("(", "( ")
-        declaration = declaration.replace("( )", "( void )")
-        declaration = declaration.replace("*)", "* )")
-        declaration = declaration.replace("const , char", "const char")
-        declaration = declaration.replace("char , const", "char const")
-        formattedchainmysh = formattedchainmysh + "    "+ declaration + "\n"
-for line in oldhfile.split("\n"):
-    if not line.startswith("#endif"):
-        myhfile.write(line + "\n")
-for line in formattedchainmysh.split("\n"):
-    if line not in oldhfile:
-        toaddinhfile = toaddinhfile + line + "\n"
-for line in oldhfile.split("\n"):
-    if line.startswith("#endif"):
-        toaddinhfile = toaddinhfile + line + "\n"
-myhfile.write(toaddinhfile)
-myhfile.close()
-myhfile = open("./lib/my/my.h", "r")
-oldhfile = myhfile.read()
-myhfile.close()
-myhfile = open("./lib/my/my.h", "w")
-for line in oldhfile.split("\n"):
-    if line == "#endif":
-        myhfile.write("\n" + line + "\n")
-    elif line == "*/":
-        myhfile.write(line + "\n\n")
-    elif line.startswith("    #define") and not firstdefined:
-        myhfile.write(line + "\n\n")
-        firstdefined = True
-    elif line[4:].split(" ")[0] in variabledeclaration and not firstdeclared:
-        myhfile.write("\n" + line + "\n")
-        firstdeclared = True
-    elif line != "":
-        myhfile.write(line + "\n")
-myhfile.close()
-
-for file in glob.glob("./lib/my/*.h"):
+def importusefulscript():
     try:
-        os.remove("./include/" + os.path.basename(file))
-    except:
-        pass
-    shutil.copy(file, "./include")
-    print("\033[0;32m" + os.path.basename(file) + " replaced in include\033[0m")
+        chaine=""
 
-print("\033[0;32mmy.h updated\033[0m")
+        print("do you want to add \033[0;32mevery useful script\033[0m to your lib ? (y/n) blank for yes")
+        addeverything = input()
 
-Makefile = open("Makefile", "r")
-oldMakefile = Makefile.read()
-Makefile.close()
-Makefile = open("Makefile", "w")
+        os.system("mkdir -p ./lib/my/utils")
+        for fich in glob.glob(SCRIPTDIR+"*.c"):
+            if os.path.isfile(fich) and not os.path.basename(fich) in filetoban:
+                if addeverything == "n" or addeverything == "N":
+                    print("do you want to add \033[0;32m"+os.path.basename(fich)+"\033[0m to your lib ? (y/n) blank for no")
+                    answer = input()
+                    if answer == "y" or answer == "Y":
+                        shutil.copy(fich, "./lib/my/utils/")
+                        chaine=chaine+"utils/"+os.path.basename(fich)+ " \\\\\\" +"\n"
+                else:
+                    shutil.copy(fich, "./lib/my/utils/")
+                    chaine=chaine+"utils/"+os.path.basename(fich)+ " \\\\\\" +"\n"
 
-for line in oldMakefile.split("\n"):
-    if line.startswith("##"):
-        toaddinMakefile = toaddinMakefile + line + "\n"
-toaddinMakefile = toaddinMakefile + "\n"
+        print("\033[0;32museful script imported \033[0m, now i'm updating:\nlib/my/Makefile, my.h and Makefile\n")
 
-for fich in glob.glob("./src/*.c"):
-    scriptinsrc = scriptinsrc + "\t\t\t\t" + fich + " \\\n"
+        updatemyh()
+        updatelimymakefile()
+        updateMakefile()  
+    except Exception as e:
+        print("\033[0;31merror while importing useful script\033[0m")
+        print(e)
 
-toaddinMakefile = toaddinMakefile + "SRCFILE\t\t=\t" + scriptinsrc + "\n"
+def updatelimymakefile():
+    try:
+        chaine=""
+        replacement = ""
 
-for fich in glob.glob("./lib/my/*.h"):
-    scriptininclude = scriptininclude + "\t\t\t\t" + fich[2:] + " \\\n"
+        for path, subdirs, files in os.walk("./lib/my"):
+            for name in files:
+                if name.endswith(".c"):
+                    chaine=chaine+ "\t\t\t" + os.path.join(path.replace("./lib/my","").replace("/",""), name) + " \\" + "\n"
+        Makefile = open("./lib/my/Makefile", "r")
+        for line in Makefile:
+            if not line.endswith(".c \\\n") and not line.startswith("SRC\t\t="):
+                replacement = replacement + line
+            if line.startswith("SRC\t\t="):
+                replacement = replacement + line[:line.find("=")+1] + chaine
+                if chaine == "":
+                    replacement = replacement + "\n"
+        for line in replacement.split("\n"):
+            if line.startswith("SRC\t\t=\t\t\t"):
+                replacement = replacement.replace(line, "SRC\t\t=\t" + line[9:])
+                
+        Makefile.close()
+        Makefileout = open("./lib/my/Makefile", "w")
+        Makefileout.write(replacement)
+        Makefileout.close()
+        print("\033[0;32mlib/my/Makefile updated\033[0m")
+    except Exception as e:
+        print("\033[0;31merror while updating lib/my/Makefile\033[0m")
+        print(e)
 
-toaddinMakefile = toaddinMakefile + "TOINCLUDE\t=\t" + scriptininclude + "\n"
 
-for line in oldMakefile.split("\n"):
-    if not line.startswith("SRCFILE\t\t=") and not line.startswith("TOINCLUDE\t=") and not line.startswith("##") and not line.startswith("\t\t\t\t") and line != "":
-        toaddinMakefile = toaddinMakefile + line + "\n"
+def updatemyh():
+    try:
+        formattedchainmysh = ""
+        oldhfile = ""
+        toaddinhfile = ""
+        firstdeclared = False
+        firstdefined = False
+        myhfile = open("./lib/my/my.h", "r")
+        oldhfile = myhfile.read()
+        myhfile.close()
+        myhfile = open("./lib/my/my.h", "w")
+        filetoaddinmyh = glob.glob("./lib/my/utils/*.c") + glob.glob("./lib/my/*.c") + glob.glob("./src/*.c")
 
-for line in toaddinMakefile.split("\n"):
-    if line.startswith("SRCFILE\t\t="):
-        toaddinMakefileformatted = toaddinMakefileformatted + "SRCFILE\t\t=\t" + line[line.find("./"):] + "\n"
+        for fich in filetoaddinmyh:
+            tempfile = open(fich, "r")
+            tempcontentfile = tempfile.read()
+            pattern = r'^\s*(\w+\s+[\*\s]*)\s*(\w+)\s*\(([^)]*)\)\s*{'
 
-    elif line.startswith("TOINCLUDE\t=\t"):
-        toaddinMakefileformatted = toaddinMakefileformatted + "TOINCLUDE\t=\t" + line[line.find("lib"):] + "\n"
+            matches = re.findall(pattern, tempcontentfile, re.MULTILINE|re.DOTALL)
 
-    elif line[:2].isupper():
-        toaddinMakefileformatted = toaddinMakefileformatted + line + "\n\n"
+            for match in matches:
+                formattedparameters = ""
+                return_type, function_name, parameters = match
+                parameters = re.sub(r'\s+', ' ', parameters.strip())
+                parameters = re.sub(r',', ' ', parameters.strip())
+                if return_type.strip() != "return":
+                    for param in (parameters.strip().split(" ")):
+                        if param not in variabledeclaration and not param.isupper():
+                            for star in list(param):
+                                if star == "*" or star == "]":
+                                    formattedparameters = formattedparameters + "*"
+                                if star == ",":
+                                    formattedparameters = formattedparameters + ", "
+                        elif param != "dirent" and not param.isupper():
+                            formattedparameters = formattedparameters + ", " + param + " "
+                        elif param == "DIR":
+                            formattedparameters = formattedparameters + ", " + param + " "
+                        else :
+                            formattedparameters = formattedparameters + param + " "
+                    if return_type.strip().endswith("*"):
+                        declaration = return_type.strip() + "" + function_name + "("+ formattedparameters + ");"
+                    else:
+                        declaration = return_type.strip() + " " + function_name + "("+ formattedparameters + ");"
+                declaration = declaration.replace("(,", "(")
+                declaration = declaration.replace("( ", "(")
+                declaration = declaration.replace("(", "( ")
+                declaration = declaration.replace("( )", "( void )")
+                declaration = declaration.replace("*)", "* )")
+                declaration = declaration.replace("const , char", "const char")
+                declaration = declaration.replace("char , const", "char const")
+                formattedchainmysh = formattedchainmysh + "    "+ declaration + "\n"
+        for line in oldhfile.split("\n"):
+            if not line.startswith("#endif"):
+                myhfile.write(line + "\n")
+        for line in formattedchainmysh.split("\n"):
+            if line not in oldhfile:
+                toaddinhfile = toaddinhfile + line + "\n"
+        for line in oldhfile.split("\n"):
+            if line.startswith("#endif"):
+                toaddinhfile = toaddinhfile + line + "\n"
+        myhfile.write(toaddinhfile)
+        myhfile.close()
+        myhfile = open("./lib/my/my.h", "r")
+        oldhfile = myhfile.read()
+        myhfile.close()
+        myhfile = open("./lib/my/my.h", "w")
+        for line in oldhfile.split("\n"):
+            if line == "#endif":
+                myhfile.write("\n" + line + "\n")
+            elif line == "*/":
+                myhfile.write(line + "\n\n")
+            elif line.startswith("    #define") and not firstdefined:
+                myhfile.write(line + "\n\n")
+                firstdefined = True
+            elif line[4:].split(" ")[0] in variabledeclaration and not firstdeclared:
+                myhfile.write("\n" + line + "\n")
+                firstdeclared = True
+            elif line != "":
+                myhfile.write(line + "\n")
+        myhfile.close()
 
-    elif line.split(":")[0] in makefilebaserule or line.startswith("$"):
-        toaddinMakefileformatted = toaddinMakefileformatted + "\n" + line + "\n"
-    elif line.split(":")[0] != "re":
-        toaddinMakefileformatted = toaddinMakefileformatted + line + "\n"
-    else:
-        toaddinMakefileformatted = toaddinMakefileformatted + "\n" + line
+        for file in glob.glob("./lib/my/*.h"):
+            try:
+                os.remove("./include/" + os.path.basename(file))
+            except:
+                pass
+            shutil.copy(file, "./include")
+            print(os.path.basename(file) + " replaced in include")
 
-Makefile.write(toaddinMakefileformatted)
-Makefile.close()
+        print("\033[0;32mmy.h updated\033[0m")
+    except Exception as e:
+        print("\033[0;31mError while updating my.h\033[0m")
+        print(e)
+       
 
-print("\033[0;32mMakefile updated\033[0m")
+def updateMakefile():
+    try:
+        toaddinMakefile = ""
+        toaddinMakefileformatted = ""
+        scriptinsrc = ""
+        scriptininclude = ""
+        needlibmy = False
+        needsrc = False
+        for path, subdirs, files in os.walk("./lib/my"):
+            for name in files:
+                if name.endswith(".c"):
+                    needlibmy = True
+        if os.path.isdir("./src"):
+            needsrc = True
+        Makefile = open("Makefile", "r")
+        oldMakefile = Makefile.read()
+        Makefile.close()
+        Makefile = open("Makefile", "w")
+
+        for line in oldMakefile.split("\n"):
+            if line.startswith("##"):
+                toaddinMakefile = toaddinMakefile + line + "\n"
+        toaddinMakefile = toaddinMakefile + "\n"
+
+        if needsrc:
+            for fich in glob.glob("./src/*.c"):
+                scriptinsrc = scriptinsrc + "\t\t\t\t" + fich + " \\\n"
+
+            toaddinMakefile = toaddinMakefile + "SRCFILE\t\t=\t" + scriptinsrc + "\n"
+
+        for fich in glob.glob("./lib/my/*.h"):
+            scriptininclude = scriptininclude + "\t\t\t\t" + fich[2:] + " \\\n"
+
+        toaddinMakefile = toaddinMakefile + "TOINCLUDE\t=\t" + scriptininclude + "\n"
+
+        for line in oldMakefile.split("\n"):
+            if not line.startswith("SRCFILE\t\t=") and not line.startswith("TOINCLUDE\t=") and not line.startswith("##") and not line.startswith("\t\t\t\t") and line != "":
+                toaddinMakefile = toaddinMakefile + line + "\n"
+
+        for line in toaddinMakefile.split("\n"):
+
+
+            if line.startswith("SRCFILE\t\t="):
+                toaddinMakefileformatted = toaddinMakefileformatted + "SRCFILE\t\t=\t" + line[line.find("./"):] + "\n"
+
+            elif line.startswith("TOINCLUDE\t=\t"):
+                toaddinMakefileformatted = toaddinMakefileformatted + "TOINCLUDE\t=\t" + line[line.find("lib"):] + "\n"
+            elif line == "$(BINNAME):\t$(INCF)" and needlibmy:
+                toaddinMakefileformatted = toaddinMakefileformatted + "\n$(BINNAME):\t$(INCF)\t$(LIBNAME)\n"
+            elif line.startswith("\tgcc -o $(BINNAME) $(MAINFILE)"):
+                if needlibmy and not needsrc:
+                    toaddinMakefileformatted = toaddinMakefileformatted + "\tgcc -o $(BINNAME) $(MAINFILE) $(LIB) $(FLAGS)\n"
+                elif not needlibmy and needsrc:
+                    toaddinMakefileformatted = toaddinMakefileformatted + "\tgcc -o $(BINNAME) $(MAINFILE) $(SRCFILE) $(FLAGS)\n"
+                elif needlibmy and needsrc:
+                    toaddinMakefileformatted = toaddinMakefileformatted + "\tgcc -o $(BINNAME) $(MAINFILE) $(SRCFILE) $(LIB) $(FLAGS)\n"
+                else:
+                    toaddinMakefileformatted = toaddinMakefileformatted + line + "\n"
+            elif line[:2].isupper():
+                toaddinMakefileformatted = toaddinMakefileformatted + line + "\n\n"
+
+            elif line.split(":")[0] in makefilebaserule or line.startswith("$"):
+                toaddinMakefileformatted = toaddinMakefileformatted + "\n" + line + "\n"
+            elif line.split(":")[0] != "re":
+                toaddinMakefileformatted = toaddinMakefileformatted + line + "\n"
+            else:
+                toaddinMakefileformatted = toaddinMakefileformatted + "\n" + line
+
+        Makefile.write(toaddinMakefileformatted)
+        Makefile.close()
+
+        print("\033[0;32mMakefile updated\033[0m")
+    except Exception as e:
+        print("\033[0;31mError: can't update Makefile\033[0m")
+        print(e)
+
+def addmain():
+    try:
+        shutil.copy(SCRIPTDIR+"main.c", ".")
+        print("\033[0;32mmain.c added\033[0m")
+    except Exception as e:
+        print("\033[0;31mError: can't add main\033[0m")
+        print(e)
+
+
+def addsrc():
+    try:
+        os.system("mkdir -p src")
+        shutil.copy(SCRIPTDIR+"my_src.c", "./src")
+        print("\033[0;32mmy_src.c added\033[0m now i'm updating the makefile")
+        updateMakefile()
+    except Exception as e:
+        print("\033[0;31mError: can't add src\033[0m")
+        print(e)
+
+
+def addtests():
+    try:
+        os.system("mkdir -p tests")
+        shutil.copy(SCRIPTDIR+"my_test.c", "./tests")
+        shutil.copy(SCRIPTDIR+"test_text.txt", "./tests")
+        shutil.copy(SCRIPTDIR+"testMakefile", "./tests/Makefile")
+        print("\033[0;32mtests folder added\033[0m")
+    except Exception as e:
+        print("\033[0;31mError: can't add tests\033[0m")
+        print(e)
+
+
+def addftests():
+    try:
+        os.system("mkdir -p ftests")
+        shutil.copy(SCRIPTDIR+"ftest.toml", "./ftests")
+        shutil.copy(SCRIPTDIR+"mouliMakefile", "./ftests/Makefile")
+        print("\033[0;32mftests folder added\033[0m")
+    except Exception as e:
+        print("\033[0;31mError: can't add ftests\033[0m")
+        print(e)
+
+
+def addgitignore():
+    try:
+        gitignorefile = open(".gitignore", "w")
+        gitignorefile.write(".vscode \n.gitignore \n*.out\n*.a\nsrc/main.c\n*.tgz\nmain\n*.o \nftest/ \ntests/ \ninclude/ \n")
+        gitignorefile.close()
+        print("\033[0;32mgitignore added\033[0m")
+    except Exception as e:
+        print("\033[0;31mError: can't add gitignore\033[0m")
+        print(e)
+
+def checkheader():
+    try:
+        chaine=""
+        replacement = ""
+
+        for path, subdirs, files in os.walk("."):
+            for name in files:
+                if not path.startswith("./ftests") and not path.startswith("./tests") and not name.startswith("."):
+                    chaine=chaine+ os.path.join(path, name) + "\n"
+        print (chaine)
+        print("\033[0;32mlib/my/Makefile updated\033[0m")
+    except Exception as e:
+        print("\033[0;31merror while updating lib/my/Makefile\033[0m")
+        print(e)
+
+
+
+
+print("What do you want to do ?\n\033[0;34m1\033[0m : importing \033[0;32museful scrpit\033[0m -> 2 3 4\n\033[0;34m2\033[0m : updating the \033[0;32mMakefile in lib/my\033[0m\n\033[0;34m3\033[0m : \033[0;32mupdating my.h\033[0m")
+print("\033[0;34m4\033[0m : updating the \033[0;32mMakefile at the root\033[0m of the project\n\033[0;34m5\033[0m : add a \033[0;32mmain.c file \033[0mto your project\n\033[0;34m6\033[0m : add a \033[0;32msrc folder \033[0mto your project -> 4")
+print("\033[0;34m7\033[0m : add a \033[0;32mtests folder \033[0mto your project\n\033[0;34m8\033[0m : add a \033[0;32mftests folder \033[0mto your project\n\033[0;34m9\033[0m : adding a \033[0;32mgitignore \033[0mto your project")
+print("\033[0;34m10\033[0m : checking the \033[0;32mfile's header \033[0mto and make sure they'r correct\nyou can choose multiple option by separating them with a space")
+try:
+    choise = input()
+    for i in choise.split(" "):
+        if i == "1":
+            importusefulscript()
+        if i == "2":
+            updatelimymakefile()
+        if i == "3":
+            updatemyh()
+        if i == "4":
+            updateMakefile()
+        if i == "5":
+            addmain()
+        if i == "6":
+            addsrc()
+        if i == "7":
+            addtests()
+        if i == "8":
+            addftests()
+        if i == "9":
+            addgitignore()
+        if i == "10":
+            checkheader()
+except:
+    print("\033[F")

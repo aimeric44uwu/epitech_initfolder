@@ -5,7 +5,7 @@ import glob
 import shutil
 import re
 
-SCRIPTDIR="./useful_script/"
+SCRIPTDIR="/home/44_uwu/Documents/useful_script/"
 chaine=""
 srcfile="./src/my_src.c"
 tempfile = ""
@@ -23,30 +23,32 @@ os.system("mkdir -p lib")
 os.chdir("lib")
 os.system("mkdir -p my")
 os.chdir("my")
-os.system("mkdir -p utils")
-os.chdir("utils")
 
 print("do you want to add \033[0;32mevery useful script\033[0m to your lib ? (y/n) blank for yes")
-addeverything = input()
+print("write \033[0;32mn -f\033[0m if you don't any useful script")
 
-for fich in glob.glob(SCRIPTDIR+"*.c"):
-    if os.path.isfile(fich) and not os.path.basename(fich) in filetoban:
-        if addeverything == "n" or addeverything == "N":
-            print("do you want to add \033[0;32m"+os.path.basename(fich)+"\033[0m to your lib ? (y/n) blank for no")
-            answer = input()
-            if answer == "y" or answer == "Y":
+addeverything = input()
+if addeverything != "n -f":
+    os.system("mkdir -p utils")
+    os.chdir("utils")
+    for fich in glob.glob(SCRIPTDIR+"*.c"):
+        if os.path.isfile(fich) and not os.path.basename(fich) in filetoban:
+            if addeverything == "n" or addeverything == "N":
+                print("do you want to add \033[0;32m"+os.path.basename(fich)+"\033[0m to your lib ? (y/n) blank for no")
+                answer = input()
+                if answer == "y" or answer == "Y":
+                    shutil.copy(fich, ".")
+                    chaine=chaine+"utils/"+os.path.basename(fich)+ " \\\\\\" +"\n"
+            else:
                 shutil.copy(fich, ".")
                 chaine=chaine+"utils/"+os.path.basename(fich)+ " \\\\\\" +"\n"
-        else:
-            shutil.copy(fich, ".")
-            chaine=chaine+"utils/"+os.path.basename(fich)+ " \\\\\\" +"\n"
 
-os.chdir("../")
-
+    os.chdir("../")
 shutil.copy(SCRIPTDIR+"libMakefile", "Makefile")
-os.system("sed -i 's/SRC	  =/SRC    ="+chaine.replace("/", "\\/")+"/' Makefile")
-os.system("sed -i 's/utils/\t\t\tutils/' Makefile")
-os.system("sed -i 's/SRC    =			/SRC\t\t=\t/' Makefile")
+if addeverything != "n -f":
+    os.system("sed -i 's/SRC	  =/SRC    ="+chaine.replace("/", "\\/")+"/' Makefile")
+    os.system("sed -i 's/utils/\t\t\tutils/' Makefile")
+    os.system("sed -i 's/SRC    =			/SRC\t\t=\t/' Makefile")
 
 shutil.copy(SCRIPTDIR+"create_struct.h", ".")
 
@@ -71,6 +73,25 @@ if answer != "n" and answer != "N":
         changes = line.replace("INCF\t\t=\tinclude", "INCF\t\t=\tinclude\n\nSRCFILE\t\t=\t" + srcfile + " \\")
         changes = changes.replace("gcc -o $(BINNAME) $(MAINFILE) $(LIB) $(FLAGS)", "gcc -o $(BINNAME) $(MAINFILE) $(SRCFILE) $(LIB) $(FLAGS)")
         replacement = replacement + changes
+    Makefile.close()
+    Makefileout = open("Makefile", "w")
+    Makefileout.write(replacement)
+    Makefileout.close()
+
+if addeverything == "n -f":
+    Makefile = open("Makefile", "r")
+    replacement = ""
+    for line in Makefile:
+        changes = line.replace("$(BINNAME):\t$(INCF)\t$(LIBNAME)", "$(BINNAME):\t$(INCF)")
+        changes = changes.replace("$(LIB)", "")
+        changes = changes.replace(" $(FLAGS)", "$(FLAGS)")
+        replacement = replacement + changes
+    for line in replacement.split("\n"):
+        if line != "" and line.startswith("\t") or line.startswith("##"):
+            tempfile = tempfile + line + "\n"
+        elif not line.startswith("\t") and line != "":
+            tempfile = tempfile + "\n" + line + "\n"
+    replacement = tempfile
     Makefile.close()
     Makefileout = open("Makefile", "w")
     Makefileout.write(replacement)
